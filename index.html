@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0d">
+<title>Genealogy by RGN</title>
+<style>
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --card: #181818;
+    --border: #2a2a2a;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --gold3: #f5e0a0;
+    --copper: #b87333;
+    --text: #f0e8d8;
+    --text2: #a89070;
+    --text3: #6b5a40;
+    --accent: #c9a84c;
+    --red: #e05252;
+    --green: #52c87a;
+    --blue: #5288e0;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+    --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    --nav-h: 64px;
+    --tab-h: 60px;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; overflow: hidden; }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--gold3); border-radius: 2px; opacity: .4; }
+
+  /* ===== APP SHELL ===== */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  /* ===== TOP NAV ===== */
+  .topnav {
+    height: var(--nav-h);
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+  }
+  .topnav-logo {
+    display: flex; align-items: center; gap: 10px; text-decoration: none;
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(201,168,76,0.3);
+  }
+  .logo-text { line-height: 1.1; }
+  .logo-title { font-size: 16px; font-weight: 700; color: var(--gold2); letter-spacing: .5px; }
+  .logo-sub { font-size: 10px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; }
+  .topnav-spacer { flex: 1; }
+  .topnav-search {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 14px 7px 36px;
+    color: var(--text);
+    font-size: 13px;
+    width: 200px;
+    outline: none;
+    transition: border-color .2s, width .3s;
+    position: relative;
+  }
+  .topnav-search:focus { border-color: var(--gold); width: 260px; }
+  .search-wrap { position: relative; }
+  .search-wrap::before {
+    content: '🔍'; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: .5; pointer-events: none;
+  }
+  .notif-btn {
+    width: 36px; height: 36px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; position: relative; transition: border-color .2s;
+  }
+  .notif-btn:hover { border-color: var(--gold); }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px; width: 7px; height: 7px;
+    background: var(--gold); border-radius: 50%; border: 2px solid var(--bg2);
+  }
+  .avatar-btn {
+    width: 36px; height: 36px; background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    border-radius: 50%; cursor: pointer; overflow: hidden; border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+    font-size: 14px; color: var(--bg); transition: box-shadow .2s;
+  }
+  .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(201,168,76,0.3); }
+
+  /* ===== CONTENT AREA ===== */
+  .content { flex: 1; overflow: hidden; position: relative; }
+  .page { display: none; height: 100%; overflow-y: auto; padding-bottom: 20px; }
+  .page.active { display: block; }
+
+  /* ===== BOTTOM TABS ===== */
+  .bottomtabs {
+    height: var(--tab-h);
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  .tab-btn {
+    flex: 1; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; color: var(--text3); transition: color .2s;
+    font-size: 9px; text-transform: uppercase; letter-spacing: .5px; font-family: var(--font);
+    position: relative;
+  }
+  .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tab-btn.active { color: var(--gold); }
+  .tab-btn.active::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 40px; height: 2px; background: var(--gold); border-radius: 0 0 2px 2px;
+  }
+  .tab-btn:hover:not(.active) { color: var(--text2); }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 8px 20px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .footer span { color: var(--gold); font-weight: 600; }
+
+  /* ===== SECTION HEADER ===== */
+  .sec-header {
+    padding: 20px 20px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sec-title { font-size: 20px; font-weight: 700; color: var(--gold2); }
+  .sec-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .badge {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    color: var(--bg); font-size: 10px; font-weight: 700; padding: 3px 9px;
+    border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-gold { border-color: rgba(201,168,76,0.3); }
+  .mx { margin: 0 16px; }
+
+  /* ===== HOME PAGE ===== */
+  .hero {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(184,115,51,0.06) 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin: 12px 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+  }
+  .hero-icon { font-size: 48px; margin-bottom: 10px; }
+  .hero h2 { font-size: 22px; font-weight: 800; color: var(--gold2); margin-bottom: 6px; }
+  .hero p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 16px 16px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 10px; text-align: center;
+  }
+  .stat-num { font-size: 24px; font-weight: 800; color: var(--gold2); }
+  .stat-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px 16px; }
+  .qa-btn {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 12px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: border-color .2s, background .2s; text-align: left;
+  }
+  .qa-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+  .qa-icon { font-size: 24px; flex-shrink: 0; }
+  .qa-text { font-size: 12px; font-weight: 600; color: var(--text); }
+  .qa-sub { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+  .recent-list { margin: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+  .recent-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .recent-item:hover { border-color: var(--gold); }
+  .ri-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .ri-info { flex: 1; }
+  .ri-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ri-detail { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .ri-badge { font-size: 10px; color: var(--gold); background: rgba(201,168,76,0.1); padding: 2px 8px; border-radius: 10px; }
+
+  /* ===== TREE PAGE ===== */
+  .tree-toolbar {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+    border-bottom: 1px solid var(--border); overflow-x: auto;
+  }
+  .tree-toolbar::-webkit-scrollbar { display: none; }
+  .tbtn {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text2); font-size: 12px; padding: 7px 12px; cursor: pointer;
+    white-space: nowrap; display: flex; align-items: center; gap: 6px; font-family: var(--font);
+    transition: border-color .2s, color .2s;
+  }
+  .tbtn:hover, .tbtn.active { border-color: var(--gold); color: var(--gold); }
+  .tbtn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  #tree-canvas {
+    width: 100%; cursor: grab; display: block; background: var(--bg);
+    touch-action: pan-x pan-y;
+  }
+  #tree-canvas:active { cursor: grabbing; }
+
+  .tree-legend {
+    display: flex; gap: 16px; padding: 10px 16px;
+    border-top: 1px solid var(--border); overflow-x: auto;
+    background: var(--bg2);
+  }
+  .tree-legend::-webkit-scrollbar { display: none; }
+  .leg-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .leg-label { font-size: 11px; color: var(--text2); }
+
+  /* ===== MEMBER DETAIL PANEL ===== */
+  .panel-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+    display: none; align-items: flex-end;
+  }
+  .panel-overlay.open { display: flex; }
+  .panel {
+    background: var(--bg2); border-top: 2px solid var(--gold);
+    border-radius: 16px 16px 0 0; width: 100%; max-height: 70vh; overflow-y: auto;
+    padding: 20px; animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .panel-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .panel-close {
+    position: absolute; right: 16px; top: 16px; width: 28px; height: 28px;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--text2);
+  }
+
+  /* ===== PHOTO / DETECT PAGE ===== */
+  .upload-zone {
+    border: 2px dashed var(--gold);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    margin: 0 16px 16px;
+    background: rgba(201,168,76,0.04);
+    transition: background .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.dragover { background: rgba(201,168,76,0.09); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 48px; margin-bottom: 12px; }
+  .upload-title { font-size: 16px; font-weight: 700; color: var(--gold2); margin-bottom: 6px; }
+  .upload-sub { font-size: 12px; color: var(--text2); }
+
+  #preview-img {
+    width: 100%; max-height: 280px; object-fit: cover;
+    border-radius: var(--radius); display: none; margin: 0 0 12px;
+  }
+  .preview-wrap { margin: 0 16px 16px; }
+
+  .analyze-btn {
+    width: calc(100% - 32px); margin: 0 16px 16px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    border: none; border-radius: var(--radius);
+    padding: 14px; color: var(--bg); font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: .5px; font-family: var(--font);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity .2s, transform .1s; display: none;
+  }
+  .analyze-btn:hover { opacity: .9; }
+  .analyze-btn:active { transform: scale(.98); }
+  .analyze-btn.visible { display: flex; }
+
+  .results-section { margin: 0 16px; display: none; }
+  .results-section.visible { display: block; }
+
+  .origins-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .origin-row { display: flex; align-items: center; gap: 10px; }
+  .origin-label { font-size: 12px; color: var(--text2); width: 120px; flex-shrink: 0; }
+  .origin-bar-wrap { flex: 1; background: var(--bg3); border-radius: 20px; height: 8px; overflow: hidden; }
+  .origin-bar { height: 100%; border-radius: 20px; transition: width 1s ease; width: 0; }
+  .origin-pct { font-size: 12px; color: var(--gold); font-weight: 700; width: 36px; text-align: right; }
+
+  .confidence-ring {
+    width: 100px; height: 100px; margin: 0 auto 12px;
+    position: relative;
+  }
+  .confidence-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .confidence-ring .ring-bg { fill: none; stroke: var(--bg3); stroke-width: 8; }
+  .confidence-ring .ring-fg { fill: none; stroke: var(--gold); stroke-width: 8; stroke-linecap: round;
+    stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 1.2s ease; }
+  .ring-label {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 18px; font-weight: 800;
+    color: var(--gold2);
+  }
+  .ring-sub { font-size: 9px; color: var(--text2); text-transform: uppercase; }
+
+  /* ===== MAP PAGE ===== */
+  #world-map-container {
+    width: 100%; padding: 0 16px 16px;
+    position: relative;
+  }
+  #world-svg { width: 100%; height: auto; }
+  .map-legend { margin: 0 16px; }
+  .map-legend-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+  .map-legend-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .map-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .map-leg-info { flex: 1; }
+  .map-leg-name { font-size: 12px; color: var(--text); font-weight: 600; }
+  .map-leg-pct { font-size: 11px; color: var(--gold); font-weight: 700; }
+
+  .dna-disclaimer {
+    margin: 12px 16px; padding: 12px 14px;
+    background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px; font-size: 11px; color: var(--text2); line-height: 1.5;
+  }
+  .dna-disclaimer strong { color: var(--gold); }
+
+  /* ===== PROFILE PAGE ===== */
+  .profile-hero {
+    padding: 24px 16px 16px;
+    display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(180deg, rgba(201,168,76,0.1) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .profile-avatar {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    border-radius: 50%; border: 3px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; font-weight: 800; color: var(--bg);
+    box-shadow: 0 0 0 6px rgba(201,168,76,0.15), var(--shadow);
+    cursor: pointer; margin-bottom: 12px; position: relative; overflow: hidden;
+  }
+  .profile-avatar-edit {
+    position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.6);
+    text-align: center; font-size: 11px; padding: 4px; color: var(--gold);
+  }
+  .profile-name { font-size: 22px; font-weight: 800; color: var(--gold2); }
+  .profile-tagline { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .profile-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+  .ptag {
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25);
+    color: var(--gold); font-size: 10px; padding: 3px 10px; border-radius: 20px;
+  }
+
+  .profile-section { padding: 16px 16px 0; }
+  .profile-section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .profile-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .info-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .info-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+  .info-value { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 3px; }
+  .info-value.gold { color: var(--gold); }
+
+  .dna-bars-profile { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .dna-row { display: flex; align-items: center; gap: 10px; }
+  .dna-flag { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+  .dna-info { flex: 1; }
+  .dna-region { font-size: 12px; font-weight: 600; color: var(--text); }
+  .dna-barwrap { background: var(--bg3); border-radius: 20px; height: 6px; margin-top: 3px; overflow: hidden; }
+  .dna-barfill { height: 100%; border-radius: 20px; }
+  .dna-pct { font-size: 12px; font-weight: 700; color: var(--gold); width: 36px; text-align: right; }
+
+  .settings-list { display: flex; flex-direction: column; gap: 1px; margin-bottom: 16px; }
+  .settings-item {
+    background: var(--card); border: 1px solid var(--border); padding: 13px 14px;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: background .15s;
+  }
+  .settings-item:first-child { border-radius: 10px 10px 0 0; }
+  .settings-item:last-child { border-radius: 0 0 10px 10px; border-radius: 10px; }
+  .settings-item + .settings-item { border-top: none; }
+  .settings-item:hover { background: rgba(201,168,76,0.05); }
+  .settings-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+  .settings-text { flex: 1; }
+  .settings-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .settings-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .settings-arrow { color: var(--text3); font-size: 16px; }
+
+  .toggle {
+    width: 42px; height: 24px; background: var(--bg3); border-radius: 12px;
+    position: relative; cursor: pointer; transition: background .2s; border: 1px solid var(--border);
+  }
+  .toggle.on { background: var(--gold); border-color: var(--gold); }
+  .toggle::after {
+    content: ''; position: absolute; width: 18px; height: 18px; background: white;
+    border-radius: 50%; top: 2px; left: 2px; transition: transform .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* ===== ADD MEMBER MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 300;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+    width: 100%; max-width: 400px; padding: 24px; max-height: 90vh; overflow-y: auto;
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--gold2); margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text);
+    font-size: 14px; outline: none; font-family: var(--font); transition: border-color .2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--gold); }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-cancel {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; color: var(--text2); font-size: 14px; cursor: pointer; font-family: var(--font);
+    transition: border-color .2s;
+  }
+  .btn-cancel:hover { border-color: var(--text2); }
+  .btn-save {
+    flex: 2; background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%);
+    border: none; border-radius: 8px; padding: 12px; color: var(--bg);
+    font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font);
+    transition: opacity .2s;
+  }
+  .btn-save:hover { opacity: .9; }
+
+  /* ===== LOADING SPINNER ===== */
+  .spinner {
+    width: 40px; height: 40px; margin: 20px auto;
+    border: 3px solid var(--border); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--bg2); border: 1px solid var(--gold); border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; color: var(--text);
+    z-index: 999; transition: transform .3s ease; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (min-width: 600px) {
+    .stats-row { grid-template-columns: repeat(4, 1fr); }
+    .info-grid { grid-template-columns: repeat(3, 1fr); }
+    .map-legend-grid { grid-template-columns: repeat(3, 1fr); }
+    .topnav-search { width: 240px; }
+    .topnav-search:focus { width: 320px; }
+  }
+  @media (min-width: 900px) {
+    .quick-actions { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP NAVIGATION -->
+  <nav class="topnav">
+    <div class="topnav-logo">
+      <div class="logo-icon">🌳</div>
+      <div class="logo-text">
+        <div class="logo-title">Genealogy by RGN</div>
+        <div class="logo-sub">Heritage &amp; Origins</div>
+      </div>
+    </div>
+    <div class="topnav-spacer"></div>
+    <div class="search-wrap" style="display:flex;align-items:center;">
+      <input class="topnav-search" type="text" placeholder="Rechercher un ancêtre…">
+    </div>
+    <div class="notif-btn" onclick="showToast('✅ Aucune nouvelle notification')">🔔<div class="notif-dot"></div></div>
+    <div class="avatar-btn" onclick="navigate('profile')">RG</div>
+  </nav>
+
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- ===== HOME PAGE ===== -->
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <div class="hero-icon">🌳</div>
+        <h2>Votre héritage, révélé</h2>
+        <p>Explorez votre arbre généalogique,<br>découvrez vos origines ethniques par l'ADN et la photo.</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-members">47</div>
+          <div class="stat-label">Membres</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Générations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">12</div>
+          <div class="stat-label">Origines</div>
+        </div>
+      </div>
+
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Actions rapides</div>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <div class="qa-btn" onclick="openAddModal()">
+          <div class="qa-icon">➕</div>
+          <div><div class="qa-text">Ajouter</div><div class="qa-sub">Un membre</div></div>
+        </div>
+        <div class="qa-btn" onclick="navigate('photo')">
+          <div class="qa-icon">📷</div>
+          <div><div class="qa-text">Analyser</div><div class="qa-sub">Photo ADN</div></div>
+        </div>
+        <div class="qa-btn" onclick="navigate('tree')">
+          <div class="qa-icon">🌿</div>
+          <div><div class="qa-text">Arbre</div><div class="qa-sub">Généalogique</div></div>
+        </div>
+        <div class="qa-btn" onclick="navigate('map')">
+          <div class="qa-icon">🗺️</div>
+          <div><div class="qa-text">Carte</div><div class="qa-sub">Origines</div></div>
+        </div>
+      </div>
+
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Membres récents</div>
+          <div class="sec-sub">Dernières mises à jour</div>
+        </div>
+        <div class="badge">Nouveau</div>
+      </div>
+      <div class="recent-list">
+        <div class="recent-item" onclick="showMemberPanel('René Grondin','1985','Réunion, France','Créole, Français, Malgache')">
+          <div class="ri-avatar">👨</div>
+          <div class="ri-info">
+            <div class="ri-name">René GRONDIN</div>
+            <div class="ri-detail">Né 1985 · Réunion, France</div>
+          </div>
+          <div class="ri-badge">Vous</div>
+        </div>
+        <div class="recent-item" onclick="showMemberPanel('Marie Grondin','1960','Saint-Denis, Réunion','Créole, Français')">
+          <div class="ri-avatar">👩</div>
+          <div class="ri-info">
+            <div class="ri-name">Marie GRONDIN</div>
+            <div class="ri-detail">Née 1960 · Saint-Denis, Réunion</div>
+          </div>
+          <div class="ri-badge">Mère</div>
+        </div>
+        <div class="recent-item" onclick="showMemberPanel('Jean-Pierre Grondin','1935','Saint-Paul, Réunion','Créole, Africain')">
+          <div class="ri-avatar">👴</div>
+          <div class="ri-info">
+            <div class="ri-name">Jean-Pierre GRONDIN</div>
+            <div class="ri-detail">Né 1935 · Saint-Paul, Réunion</div>
+          </div>
+          <div class="ri-badge">GP</div>
+        </div>
+        <div class="recent-item" onclick="showMemberPanel('Fatima Nassur','1938','Mayotte, Comores','Comorien, Swahili')">
+          <div class="ri-avatar">👵</div>
+          <div class="ri-info">
+            <div class="ri-name">Fatima NASSUR</div>
+            <div class="ri-detail">Née 1938 · Mayotte, Comores</div>
+          </div>
+          <div class="ri-badge">GM</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ===== TREE PAGE ===== -->
+    <div class="page" id="page-tree">
+      <div class="tree-toolbar">
+        <button class="tbtn active" onclick="setTreeView(this,'all')">
+          <svg viewBox="0 0 24 24"><path d="M12 2v4m0 0c-2.5 0-4 1.5-4 4h8c0-2.5-1.5-4-4-4zm-4 4H4v4h4m8-4h4v4h-4M8 10v4m8-4v4M6 14h12v2H6zm3 2v4m6-4v4"/></svg>
+          Tous
+        </button>
+        <button class="tbtn" onclick="setTreeView(this,'ascendants')">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
+          Ascendants
+        </button>
+        <button class="tbtn" onclick="setTreeView(this,'descendants')">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14m0 0l-7-7m7 7l7-7"/></svg>
+          Descendants
+        </button>
+        <button class="tbtn" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter
+        </button>
+        <button class="tbtn" onclick="showToast('📤 Export PDF en cours…')">
+          <svg viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+          Exporter
+        </button>
+      </div>
+
+      <canvas id="tree-canvas"></canvas>
+
+      <div class="tree-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#c9a84c"></div><div class="leg-label">Vous</div></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#5288e0"></div><div class="leg-label">Parents</div></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#52c87a"></div><div class="leg-label">Grands-parents</div></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#c87a52"></div><div class="leg-label">Arrière-GP</div></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#9952c8"></div><div class="leg-label">Conjoint</div></div>
+      </div>
+    </div>
+
+    <!-- ===== PHOTO / DETECT PAGE ===== -->
+    <div class="page" id="page-photo">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Analyse ADN Visuelle</div>
+          <div class="sec-sub">Détection des origines ethniques par photo</div>
+        </div>
+        <div class="badge">IA</div>
+      </div>
+
+      <label class="upload-zone" id="upload-zone">
+        <input type="file" accept="image/*" onchange="handlePhoto(this)">
+        <div class="upload-icon">📸</div>
+        <div class="upload-title">Glissez ou sélectionnez une photo</div>
+        <div class="upload-sub">Portrait de face recommandé · JPG, PNG · Max 10 Mo</div>
+      </label>
+
+      <div class="preview-wrap">
+        <img id="preview-img" alt="Aperçu photo" />
+      </div>
+
+      <button class="analyze-btn" id="analyze-btn" onclick="analyzePhoto()">
+        🔬 Analyser les origines
+      </button>
+
+      <div class="results-section" id="results-section">
+        <div class="card card-gold mx" style="margin-bottom:12px;">
+          <div style="text-align:center;margin-bottom:12px;">
+            <div class="confidence-ring" id="conf-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="40"/>
+                <circle class="ring-fg" id="ring-fg" cx="50" cy="50" r="40"/>
+              </svg>
+              <div class="ring-label">
+                <span id="conf-pct">0%</span>
+                <span class="ring-sub">Confiance</span>
+              </div>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--gold2)">Résultats d'analyse</div>
+          </div>
+          <div class="origins-bars" id="origins-bars"></div>
+        </div>
+
+        <div class="card mx" style="margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">🧬 Haplogroupe probable</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6" id="haplo-text">
+            — Analyse en cours —
+          </div>
+        </div>
+
+        <button class="analyze-btn visible" style="background:linear-gradient(135deg,#2a7a52,#1a5a3a)" onclick="saveToProfile()">
+          💾 Sauvegarder dans mon profil
+        </button>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ===== MAP PAGE ===== -->
+    <div class="page" id="page-map">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Carte des Origines</div>
+          <div class="sec-sub">Répartition géographique de votre ADN</div>
+        </div>
+      </div>
+
+      <div id="world-map-container">
+        <svg id="world-svg" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+          <!-- Simplified world map regions -->
+          <rect width="1000" height="500" fill="#141414" rx="12"/>
+
+          <!-- Ocean grid lines -->
+          <g stroke="#1e1e1e" stroke-width="0.5" opacity="0.5">
+            <line x1="0" y1="100" x2="1000" y2="100"/>
+            <line x1="0" y1="200" x2="1000" y2="200"/>
+            <line x1="0" y1="300" x2="1000" y2="300"/>
+            <line x1="0" y1="400" x2="1000" y2="400"/>
+            <line x1="200" y1="0" x2="200" y2="500"/>
+            <line x1="400" y1="0" x2="400" y2="500"/>
+            <line x1="600" y1="0" x2="600" y2="500"/>
+            <line x1="800" y1="0" x2="800" y2="500"/>
+          </g>
+
+          <!-- North America -->
+          <path d="M50,80 L220,80 L240,140 L220,200 L160,240 L120,280 L80,260 L50,200 Z"
+                fill="#2a2a2a" stroke="#333" stroke-width="1" class="map-region" id="r-northamerica"
+                onclick="mapClick('Amérique du Nord','5%')"/>
+
+          <!-- South America -->
+          <path d="M140,290 L220,280 L240,330 L220,420 L160,440 L120,400 L110,340 Z"
+                fill="#2a2a2a" stroke="#333" stroke-width="1" class="map-region" id="r-southamerica"
+                onclick="mapClick('Amérique du Sud','3%')"/>
+
+          <!-- Europe -->
+          <path d="M400,60 L520,60 L540,100 L520,150 L460,170 L400,150 L380,110 Z"
+                fill="#c9a84c" stroke="#e8c97a" stroke-width="1.5" class="map-region active-region" id="r-europe"
+                onclick="mapClick('Europe (France)','34%')" style="opacity:0.85"/>
+
+          <!-- Africa - highlighted strong -->
+          <path d="M420,170 L560,170 L590,230 L580,340 L520,400 L460,400 L400,340 L390,260 L400,200 Z"
+                fill="#b87333" stroke="#e8a040" stroke-width="1.5" class="map-region active-region" id="r-africa"
+                onclick="mapClick('Afrique sub-saharienne','28%')" style="opacity:0.9"/>
+
+          <!-- Africa East - Comoros / Réunion highlight -->
+          <circle cx="590" cy="330" r="18" fill="#e05252" stroke="#ff8080" stroke-width="1.5"
+                  onclick="mapClick('Océan Indien (Réunion/Comores)','22%')" style="cursor:pointer;opacity:0.9"/>
+          <text x="590" y="360" font-size="9" fill="#ff8080" text-anchor="middle">La Réunion</text>
+
+          <!-- Middle East / India -->
+          <path d="M560,130 L680,130 L700,180 L680,220 L620,240 L570,210 L550,170 Z"
+                fill="#2a2a2a" stroke="#333" stroke-width="1" class="map-region" id="r-middleeast"
+                onclick="mapClick('Moyen-Orient / Asie du Sud','4%')"/>
+
+          <!-- South / SE Asia -->
+          <path d="M690,120 L820,100 L860,150 L840,220 L780,240 L720,220 L680,180 Z"
+                fill="#2a2a2a" stroke="#333" stroke-width="1" class="map-region" id="r-asia"
+                onclick="mapClick('Asie du Sud-Est','6%')"/>
+
+          <!-- Madagascar highlight -->
+          <ellipse cx="570" cy="370" rx="16" ry="22" fill="#52c87a" stroke="#80e0a0" stroke-width="1.5"
+                   onclick="mapClick('Madagascar','12%')" style="cursor:pointer;opacity:0.85"/>
+          <text x="570" y="400" font-size="9" fill="#80e0a0" text-anchor="middle">Madagascar</text>
+
+          <!-- India subcontinent -->
+          <path d="M660,200 L720,190 L730,250 L680,290 L640,260 L640,220 Z"
+                fill="#2a2a2a" stroke="#333" stroke-width="1" class="map-region" id="r-india"
+                onclick="mapClick('Sous-continent Indien','5%')"/>
+
+          <!-- Russia / North Asia -->
+          <path d="M520,30 L880,30 L900,80 L860,100 L720,100 L540,90 Z"
+                fill="#1e1e1e" stroke="#2a2a2a" stroke-width="1"/>
+
+          <!-- Australia -->
+          <path d="M760,320 L880,310 L900,380 L860,420 L780,420 L740,380 Z"
+                fill="#1e1e1e" stroke="#2a2a2a" stroke-width="1" class="map-region"
+                onclick="mapClick('Océanie','2%')"/>
+
+          <!-- Compass rose -->
+          <g transform="translate(940,460)">
+            <circle r="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+            <text font-size="8" fill="#6b5a40" text-anchor="middle" y="-5">N</text>
+            <line x1="0" y1="-12" x2="0" y2="12" stroke="#3a3a3a" stroke-width="1"/>
+            <line x1="-12" y1="0" x2="12" y2="0" stroke="#3a3a3a" stroke-width="1"/>
+          </g>
+
+          <!-- Scale bar -->
+          <g transform="translate(20,480)">
+            <rect width="80" height="6" fill="#2a2a2a" rx="3"/>
+            <rect width="40" height="6" fill="#c9a84c" rx="3"/>
+            <text x="0" y="18" font-size="7" fill="#6b5a40">0</text>
+            <text x="70" y="18" font-size="7" fill="#6b5a40">5000 km</text>
+          </g>
+
+          <!-- Title -->
+          <text x="500" y="488" font-size="10" fill="#3a3030" text-anchor="middle" font-family="sans-serif">
+            © Genealogy by RGN · Carte des origines génétiques
+          </text>
+        </svg>
+      </div>
+
+      <div class="map-legend">
+        <div class="sec-title" style="font-size:15px;margin-bottom:4px;">Distribution ADN</div>
+        <div class="map-legend-grid">
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#c9a84c"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🇫🇷 France / Europe</div>
+              <div class="map-leg-pct">34%</div>
+            </div>
+          </div>
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#b87333"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🌍 Afrique sub-saharienne</div>
+              <div class="map-leg-pct">28%</div>
+            </div>
+          </div>
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#e05252"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🏝️ Océan Indien</div>
+              <div class="map-leg-pct">22%</div>
+            </div>
+          </div>
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#52c87a"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🇲🇬 Madagascar</div>
+              <div class="map-leg-pct">12%</div>
+            </div>
+          </div>
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#5288e0"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🌏 Asie du Sud-Est</div>
+              <div class="map-leg-pct">6%</div>
+            </div>
+          </div>
+          <div class="map-legend-item">
+            <div class="map-color-dot" style="background:#9952c8"></div>
+            <div class="map-leg-info">
+              <div class="map-leg-name">🌐 Autres origines</div>
+              <div class="map-leg-pct">9%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dna-disclaimer">
+        <strong>⚠️ Note scientifique :</strong> Cette carte représente une estimation génétique basée sur des marqueurs ADN et analyses visuelles. Les résultats sont indicatifs et ne constituent pas un test ADN certifié. Pour une analyse précise, consultez un service de test génétique agréé.
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ===== PROFILE PAGE ===== -->
+    <div class="page" id="page-profile">
+      <div class="profile-hero">
+        <div class="profile-avatar" onclick="showToast('📷 Modifier la photo de profil')">
+          RG
+          <div class="profile-avatar-edit">Modifier</div>
+        </div>
+        <div class="profile-name">René GRONDIN</div>
+        <div class="profile-tagline">Passionné de généalogie · La Réunion, France</div>
+        <div class="profile-tags">
+          <span class="ptag">🌴 Réunionnais</span>
+          <span class="ptag">🧬 ADN Analysé</span>
+          <span class="ptag">🌳 6 Générations</span>
+          <span class="ptag">⭐ Expert</span>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Informations personnelles</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Prénom</div>
+            <div class="info-value">René</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Nom</div>
+            <div class="info-value">GRONDIN</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Naissance</div>
+            <div class="info-value">1985</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Lieu</div>
+            <div class="info-value">La Réunion</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Membres</div>
+            <div class="info-value gold">47</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Générations</div>
+            <div class="info-value gold">6</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section" style="margin-top:16px;">
+        <div class="profile-section-title">Origines ethniques détectées</div>
+        <div class="dna-bars-profile">
+          <div class="dna-row">
+            <div class="dna-flag">🇫🇷</div>
+            <div class="dna-info">
+              <div class="dna-region">France / Europe</div>
+              <div class="dna-barwrap"><div class="dna-barfill" style="width:34%;background:#c9a84c"></div></div>
+            </div>
+            <div class="dna-pct">34%</div>
+          </div>
+          <div class="dna-row">
+            <div class="dna-flag">🌍</div>
+            <div class="dna-info">
+              <div class="dna-region">Afrique sub-saharienne</div>
+              <div class="dna-barwrap"><div class="dna-barfill" style="width:28%;background:#b87333"></div></div>
+            </div>
+            <div class="dna-pct">28%</div>
+          </div>
+          <div class="dna-row">
+            <div class="dna-flag">🏝️</div>
+            <div class="dna-info">
+              <div class="dna-region">Océan Indien (Créole)</div>
+              <div class="dna-barwrap"><div class="dna-barfill" style="width:22%;background:#e05252"></div></div>
+            </div>
+            <div class="dna-pct">22%</div>
+          </div>
+          <div class="dna-row">
+            <div class="dna-flag">🇲🇬</div>
+            <div class="dna-info">
+              <div class="dna-region">Madagascar / Malgache</div>
+              <div class="dna-barwrap"><div class="dna-barfill" style="width:12%;background:#52c87a"></div></div>
+            </div>
+            <div class="dna-pct">12%</div>
+          </div>
+          <div class="dna-row">
+            <div class="dna-flag">🌏</div>
+            <div class="dna-info">
+              <div class="dna-region">Asie du Sud-Est</div>
+              <div class="dna-barwrap"><div class="dna-barfill" style="width:6%;background:#5288e0"></div></div>
+            </div>
+            <div class="dna-pct">6%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section" style="margin-top:16px;">
+        <div class="profile-section-title">Paramètres &amp; Compte</div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="showToast('⚙️ Paramètres du profil')">
+            <div class="settings-icon">👤</div>
+            <div class="settings-text">
+              <div class="settings-label">Modifier le profil</div>
+              <div class="settings-sub">Nom, photo, informations</div>
+            </div>
+            <div class="settings-arrow">›</div>
+          </div>
+          <div class="settings-item" onclick="showToast('🔒 Confidentialité et sécurité')">
+            <div class="settings-icon">🔒</div>
+            <div class="settings-text">
+              <div class="settings-label">Confidentialité</div>
+              <div class="settings-sub">Données et partage</div>
+            </div>
+            <div class="settings-arrow">›</div>
+          </div>
+          <div class="settings-item" onclick="showToast('📤 Export de votre arbre généalogique')">
+            <div class="settings-icon">📤</div>
+            <div class="settings-text">
+              <div class="settings-label">Exporter mes données</div>
+              <div class="settings-sub">PDF, GEDCOM, CSV</div>
+            </div>
+            <div class="settings-arrow">›</div>
+          </div>
+          <div class="settings-item" onclick="showToast('🌙 Thème déjà en mode sombre')">
+            <div class="settings-icon">🌙</div>
+            <div class="settings-text">
+              <div class="settings-label">Mode sombre</div>
+              <div class="settings-sub">Activé</div>
+            </div>
+            <div class="toggle on" onclick="event.stopPropagation();this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-item" onclick="showToast('🔔 Notifications configurées')">
+            <div class="settings-icon">🔔</div>
+            <div class="settings-text">
+              <div class="settings-label">Notifications</div>
+              <div class="settings-sub">Nouvelles correspondances</div>
+            </div>
+            <div class="toggle on" onclick="event.stopPropagation();this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-item" onclick="showToast('ℹ️ Genealogy by RGN v1.0 · © René GRONDIN 2026')">
+            <div class="settings-icon">ℹ️</div>
+            <div class="settings-text">
+              <div class="settings-label">À propos</div>
+              <div class="settings-sub">Genealogy by RGN v1.0</div>
+            </div>
+            <div class="settings-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM TABS -->
+  <nav class="bottomtabs">
+    <button class="tab-btn active" id="tab-home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Accueil
+    </button>
+    <button class="tab-btn" id="tab-tree" onclick="navigate('tree')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5m0 0l-5 5m5-5l5 5"/></svg>
+      Arbre
+    </button>
+    <button class="tab-btn" id="tab-photo" onclick="navigate('photo')">
+      <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Analyse
+    </button>
+    <button class="tab-btn" id="tab-map" onclick="navigate('map')">
+      <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Origines
+    </button>
+    <button class="tab-btn" id="tab-profile" onclick="navigate('profile')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </button>
+  </nav>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Genealogy by RGN</span> &nbsp;·&nbsp; René GRONDIN &nbsp;·&nbsp; @2026
+  </div>
+
+</div><!-- /app -->
+
+<!-- MEMBER DETAIL PANEL -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel(event)">
+  <div class="panel" style="position:relative;">
+    <div class="panel-handle"></div>
+    <div class="panel-close" onclick="document.getElementById('panel-overlay').classList.remove('open')">✕</div>
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+      <div class="ri-avatar" style="width:60px;height:60px;font-size:28px;" id="panel-avatar">👤</div>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--gold2)" id="panel-name">—</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px" id="panel-born">—</div>
+        <div style="font-size:12px;color:var(--text2)" id="panel-place">—</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px;">Origines</div>
+      <div style="font-size:14px;color:var(--gold2)" id="panel-origins">—</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-cancel" onclick="navigate('tree');closePanel()">🌿 Voir dans l'arbre</button>
+      <button class="btn-save" onclick="showToast('✅ Profil mis à jour');closePanel()">✏️ Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MEMBER MODAL -->
+<div class="modal-overlay" id="add-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">➕ Nouveau membre</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prénom</label>
+        <input class="form-input" type="text" placeholder="Marie">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nom de famille</label>
+        <input class="form-input" type="text" placeholder="GRONDIN">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date de naissance</label>
+        <input class="form-input" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sexe</label>
+        <select class="form-select">
+          <option>Femme</option>
+          <option>Homme</option>
+          <option>Non précisé</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lieu de naissance</label>
+      <input class="form-input" type="text" placeholder="Saint-Denis, La Réunion">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lien de parenté</label>
+      <select class="form-select">
+        <option>Père</option>
+        <option>Mère</option>
+        <option>Enfant</option>
+        <option>Frère / Sœur</option>
+        <option>Grand-parent</option>
+        <option>Conjoint(e)</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes / Informations</label>
+      <input class="form-input" type="text" placeholder="Informations complémentaires…">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('add-modal').classList.remove('open')">Annuler</button>
+      <button class="btn-save" onclick="addMember()">✅ Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== NAVIGATION =====
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const tb = document.getElementById('tab-' + page);
+  if (tb) tb.classList.add('active');
+  if (page === 'tree') setTimeout(drawTree, 50);
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ===== PANEL =====
+function showMemberPanel(name, born, place, origins) {
+  document.getElementById('panel-name').textContent = name;
+  document.getElementById('panel-born').textContent = 'Né(e) en ' + born;
+  document.getElementById('panel-place').textContent = '📍 ' + place;
+  document.getElementById('panel-origins').textContent = origins;
+  const avatarEl = document.getElementById('panel-avatar');
+  avatarEl.textContent = name.includes('Jean') || name.includes('René') ? '👨' : '👩';
+  document.getElementById('panel-overlay').classList.add('open');
+}
+function closePanel(e) {
+  if (!e || e.target === document.getElementById('panel-overlay'))
+    document.getElementById('panel-overlay').classList.remove('open');
+}
+
+// ===== MODAL =====
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('add-modal'))
+    document.getElementById('add-modal').classList.remove('open');
+}
+function addMember() {
+  const count = document.getElementById('stat-members');
+  count.textContent = parseInt(count.textContent) + 1;
+  document.getElementById('add-modal').classList.remove('open');
+  showToast('✅ Membre ajouté avec succès !');
+  drawTree();
+}
+
+// ===== TREE CANVAS =====
+const treeData = {
+  nodes: [
+    {id:1, label:'René\nGRONDIN', gen:0, side:'self', born:'1985'},
+    {id:2, label:'Marie\nGRONDIN', gen:1, side:'mother', born:'1960'},
+    {id:3, label:'Paul\nGRONDIN', gen:1, side:'father', born:'1958'},
+    {id:4, label:'Yvonne\nROUSSEAU', gen:2, side:'mgm', born:'1935'},
+    {id:5, label:'Jean-Pierre\nGRONDIN', gen:2, side:'mgf', born:'1933'},
+    {id:6, label:'Fatima\nNASSUR', gen:2, side:'pgm', born:'1938'},
+    {id:7, label:'Henri\nGRONDIN', gen:2, side:'pgf', born:'1930'},
+    {id:8, label:'Céleste\nPAUL', gen:3, side:'ggm1', born:'1910'},
+    {id:9, label:'Édouard\nROUSSEAU', gen:3, side:'ggf1', born:'1908'},
+    {id:10, label:'Aminata\nDIALLO', gen:3, side:'ggm2', born:'1915'},
+    {id:11, label:'Ibrahim\nNASSUR', gen:3, side:'ggf2', born:'1912'},
+  ],
+  links: [
+    [1,2],[1,3],[2,4],[2,5],[3,6],[3,7],[4,8],[4,9],[6,10],[6,11]
+  ]
+};
+
+const nodeColors = {
+  self: '#c9a84c', mother: '#5288e0', father: '#5288e0',
+  mgm: '#52c87a', mgf: '#52c87a', pgm: '#52c87a', pgf: '#52c87a',
+  ggm1: '#c87a52', ggf1: '#c87a52', ggm2: '#c87a52', ggf2: '#c87a52'
+};
+
+function drawTree() {
+  const canvas = document.getElementById('tree-canvas');
+  const container = canvas.parentElement;
+  const W = container.clientWidth;
+  const genCounts = [1, 2, 4, 4];
+  const H = genCounts.length * 120 + 60;
+  canvas.width = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Position nodes
+  const positions = {};
+  const byGen = [[1],[2,3],[4,5,6,7],[8,9,10,11]];
+  byGen.forEach((row, gi) => {
+    const y = gi * 120 + 60;
+    row.forEach((id, i) => {
+      const x = (W / (row.length + 1)) * (i + 1);
+      positions[id] = {x, y};
+    });
+  });
+
+  // Draw links
+  treeData.links.forEach(([a, b]) => {
+    const pa = positions[a], pb = positions[b];
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+    ctx.bezierCurveTo(pa.x, my, pb.x, my, pb.x, pb.y);
+    ctx.strokeStyle = 'rgba(201,168,76,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  treeData.nodes.forEach(n => {
+    const p = positions[n.id];
+    if (!p) return;
+    const r = n.gen === 0 ? 34 : 28;
+    const col = nodeColors[n.side] || '#444';
+
+    // Glow
+    if (n.gen === 0) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(201,168,76,0.12)';
+      ctx.fill();
+    }
+
+    // Circle
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#181818';
+    ctx.fill();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = n.gen === 0 ? 2.5 : 1.5;
+    ctx.stroke();
+
+    // Avatar emoji
+    ctx.font = n.gen === 0 ? '20px serif' : '16px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const emoji = n.label.includes('ine') || n.label.includes('ma') || n.label.includes('tte') || n.label.includes('leste') || n.label.includes('tim') ? '👩' : '👨';
+    ctx.fillText(emoji, p.x, p.y - 2);
+
+    // Name
+    const lines = n.label.split('\n');
+    ctx.font = n.gen === 0 ? 'bold 11px sans-serif' : '9px sans-serif';
+    ctx.fillStyle = n.gen === 0 ? '#e8c97a' : '#a89070';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(lines[0], p.x, p.y + r + 4);
+    if (lines[1]) {
+      ctx.font = n.gen === 0 ? 'bold 9px sans-serif' : '8px sans-serif';
+      ctx.fillStyle = n.gen === 0 ? '#c9a84c' : '#6b5a40';
+      ctx.fillText(lines[1], p.x, p.y + r + 16);
+    }
+  });
+
+  // Click handler
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+    treeData.nodes.forEach(n => {
+      const p = positions[n.id];
+      if (!p) return;
+      const r = n.gen === 0 ? 34 : 28;
+      if (Math.hypot(mx - p.x, my - p.y) < r + 8) {
+        const nm = n.label.replace('\n', ' ');
+        showMemberPanel(nm, n.born || '?', 'La Réunion, France', 'Créole, Français, Africain');
+      }
+    });
+  };
+}
+
+// ===== PHOTO ANALYSIS =====
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('preview-img');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+    document.getElementById('analyze-btn').classList.add('visible');
+    document.getElementById('results-section').classList.remove('visible');
+  };
+  reader.readAsDataURL(file);
+}
+
+function analyzePhoto() {
+  const btn = document.getElementById('analyze-btn');
+  btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:0;border-width:2px"></div> Analyse en cours…';
+  btn.style.pointerEvents = 'none';
+
+  setTimeout(() => {
+    btn.innerHTML = '🔬 Analyser les origines';
+    btn.style.pointerEvents = '';
+    showResults();
+  }, 2200);
+}
+
+function showResults() {
+  const results = document.getElementById('results-section');
+  results.classList.add('visible');
+
+  // Animate confidence ring
+  const pct = 87;
+  const ring = document.getElementById('ring-fg');
+  const circumf = 2 * Math.PI * 40;
+  const offset = circumf * (1 - pct / 100);
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+    let n = 0;
+    const iv = setInterval(() => {
+      n += 2;
+      if (n >= pct) { clearInterval(iv); n = pct; }
+      document.getElementById('conf-pct').textContent = n + '%';
+    }, 20);
+  }, 100);
+
+  // Origin bars
+  const origins = [
+    {label:'🇫🇷 Europe / France', pct:34, color:'#c9a84c'},
+    {label:'🌍 Afrique sub-sahar.', pct:28, color:'#b87333'},
+    {label:'🏝️ Océan Indien', pct:22, color:'#e05252'},
+    {label:'🇲🇬 Madagascar', pct:12, color:'#52c87a'},
+    {label:'🌏 Asie du Sud-Est', pct:6, color:'#5288e0'},
+    {label:'🌐 Autres', pct:9, color:'#9952c8'},
+  ];
+
+  const barsEl = document.getElementById('origins-bars');
+  barsEl.innerHTML = '';
+  origins.forEach(o => {
+    const row = document.createElement('div');
+    row.className = 'origin-row';
+    row.innerHTML = `
+      <div class="origin-label">${o.label}</div>
+      <div class="origin-bar-wrap"><div class="origin-bar" style="background:${o.color}"></div></div>
+      <div class="origin-pct">${o.pct}%</div>
+    `;
+    barsEl.appendChild(row);
+    setTimeout(() => {
+      row.querySelector('.origin-bar').style.width = o.pct + '%';
+    }, 200);
+  });
+
+  // Haplogroup
+  document.getElementById('haplo-text').innerHTML =
+    `<strong style="color:var(--gold)">Haplogroupe maternel :</strong> L3e2b (Afrique de l'Est / Madagascar)<br>
+     <strong style="color:var(--gold)">Haplogroupe paternel :</strong> E1b1a1 (Bantu sub-saharien)<br>
+     <br>
+     <em>Ancêtres probables :</em> Populations créoles de l'Océan Indien, lignée africaine bantoue, peuplement européen colonial, apport austronésien malgache.`;
+
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function saveToProfile() {
+  showToast('✅ Origines sauvegardées dans votre profil !');
+}
+
+// ===== MAP CLICK =====
+function mapClick(region, pct) {
+  showToast(`📍 ${region} · ${pct} de votre ADN`);
+}
+
+// ===== TREE VIEW =====
+function setTreeView(btn, mode) {
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawTree();
+  const labels = {all:'Arbre complet affiché', ascendants:'Vue ascendants', descendants:'Vue descendants'};
+  showToast('🌿 ' + (labels[mode] || ''));
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  // Draw tree when tab clicked
+  // Drag to scroll on tree canvas
+  let dragging = false, startX = 0, scrollLeft = 0;
+  const canvas = document.getElementById('tree-canvas');
+  canvas.addEventListener('mousedown', e => { dragging = true; startX = e.pageX; });
+  canvas.addEventListener('mouseleave', () => dragging = false);
+  canvas.addEventListener('mouseup', () => dragging = false);
+  canvas.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    e.preventDefault();
+  });
+});
+</script>
+</body>
+</html>
