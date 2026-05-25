@@ -502,10 +502,11 @@
 
   /* ===== TOAST ===== */
   .toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px);
+    position: fixed; bottom: calc(var(--tab-h) + 40px); left: 50%; transform: translateX(-50%) translateY(120px);
     background: var(--bg2); border: 1px solid var(--gold); border-radius: 10px;
     padding: 10px 20px; font-size: 13px; color: var(--text);
     z-index: 999; transition: transform .3s ease; white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -1086,8 +1087,8 @@
       <div style="font-size:14px;color:var(--gold2)" id="panel-origins">—</div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn-cancel" onclick="navigate('tree');closePanel()">🌿 Voir dans l'arbre</button>
-      <button class="btn-save" onclick="showToast('✅ Profil mis à jour');closePanel()">✏️ Modifier</button>
+      <button class="btn-cancel" onclick="navigate('tree');document.getElementById('panel-overlay').classList.remove('open')">🌿 Arbre</button>
+      <button class="btn-save" onclick="openEditMember()">✏️ Modifier</button>
     </div>
   </div>
 </div>
@@ -1099,34 +1100,33 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Prénom</label>
-        <input class="form-input" type="text" placeholder="Marie">
+        <input class="form-input" id="add-prenom" type="text" placeholder="Marie">
       </div>
       <div class="form-group">
         <label class="form-label">Nom de famille</label>
-        <input class="form-input" type="text" placeholder="GRONDIN">
+        <input class="form-input" id="add-nom" type="text" placeholder="GRONDIN">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Date de naissance</label>
-        <input class="form-input" type="date">
+        <label class="form-label">Année de naissance</label>
+        <input class="form-input" id="add-born" type="number" placeholder="1960" min="1700" max="2025">
       </div>
       <div class="form-group">
         <label class="form-label">Sexe</label>
-        <select class="form-select">
-          <option>Femme</option>
-          <option>Homme</option>
-          <option>Non précisé</option>
+        <select class="form-select" id="add-sexe">
+          <option value="F">Femme</option>
+          <option value="H">Homme</option>
         </select>
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Lieu de naissance</label>
-      <input class="form-input" type="text" placeholder="Saint-Denis, La Réunion">
+      <input class="form-input" id="add-lieu" type="text" placeholder="Saint-Denis, La Réunion">
     </div>
     <div class="form-group">
       <label class="form-label">Lien de parenté</label>
-      <select class="form-select">
+      <select class="form-select" id="add-lien">
         <option>Père</option>
         <option>Mère</option>
         <option>Enfant</option>
@@ -1137,8 +1137,12 @@
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">Notes / Informations</label>
-      <input class="form-input" type="text" placeholder="Informations complémentaires…">
+      <label class="form-label">Origines ethniques</label>
+      <input class="form-input" id="add-origines" type="text" placeholder="Créole, Africain…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-input" id="add-notes" type="text" placeholder="Informations complémentaires…">
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="document.getElementById('add-modal').classList.remove('open')">Annuler</button>
@@ -1149,6 +1153,52 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- EDIT MEMBER MODAL -->
+<div class="modal-overlay" id="edit-member-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-title">✏️ Modifier le membre</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prénom</label>
+        <input class="form-input" id="em-prenom" type="text" placeholder="Marie">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nom</label>
+        <input class="form-input" id="em-nom" type="text" placeholder="GRONDIN">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Année de naissance</label>
+        <input class="form-input" id="em-born" type="number" placeholder="1960" min="1700" max="2024">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sexe</label>
+        <select class="form-select" id="em-sexe">
+          <option value="H">Homme</option>
+          <option value="F">Femme</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lieu de naissance</label>
+      <input class="form-input" id="em-lieu" type="text" placeholder="La Réunion, France">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Origines ethniques</label>
+      <input class="form-input" id="em-origines" type="text" placeholder="Créole, Africain, Français…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-input" id="em-notes" type="text" placeholder="Informations complémentaires…">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('edit-member-modal').classList.remove('open')">Annuler</button>
+      <button class="btn-save" onclick="saveMember()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <!-- EDIT PROFILE MODAL -->
 <div class="modal-overlay" id="edit-profile-modal" onclick="closeEditProfile(event)">
@@ -1188,6 +1238,10 @@
 </div>
 
 <script>
+// ===== STORAGE =====
+function saveData(key, val) { try { localStorage.setItem('rgn_'+key, JSON.stringify(val)); } catch(e){} }
+function loadData(key, def) { try { return JSON.parse(localStorage.getItem('rgn_'+key)) || def; } catch(e){ return def; } }
+
 // ===== NAVIGATION =====
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1196,6 +1250,8 @@ function navigate(page) {
   const tb = document.getElementById('tab-' + page);
   if (tb) tb.classList.add('active');
   if (page === 'tree') setTimeout(drawTree, 50);
+  if (page === 'profile') refreshProfilePage();
+  if (page === 'home') refreshHome();
 }
 
 // ===== TOAST =====
@@ -1209,13 +1265,18 @@ function showToast(msg) {
 }
 
 // ===== PANEL =====
-function showMemberPanel(name, born, place, origins) {
-  document.getElementById('panel-name').textContent = name;
-  document.getElementById('panel-born').textContent = 'Né(e) en ' + born;
-  document.getElementById('panel-place').textContent = '📍 ' + place;
-  document.getElementById('panel-origins').textContent = origins;
-  const avatarEl = document.getElementById('panel-avatar');
-  avatarEl.textContent = name.includes('Jean') || name.includes('René') ? '👨' : '👩';
+let currentPanelNodeId = null;
+function showMemberPanel(nodeId) {
+  const node = treeData.nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  currentPanelNodeId = nodeId;
+  const [prenom, nom] = (node.label||'').split('\n');
+  const sexe = node.sexe || 'H';
+  document.getElementById('panel-name').textContent = (prenom||'') + ' ' + (nom||'');
+  document.getElementById('panel-born').textContent = 'Né(e) en ' + (node.born||'?');
+  document.getElementById('panel-place').textContent = '📍 ' + (node.lieu||'La Réunion, France');
+  document.getElementById('panel-origins').textContent = node.origines || 'Créole, Français, Africain';
+  document.getElementById('panel-avatar').textContent = sexe === 'F' ? '👩' : '👨';
   document.getElementById('panel-overlay').classList.add('open');
 }
 function closePanel(e) {
@@ -1223,8 +1284,46 @@ function closePanel(e) {
     document.getElementById('panel-overlay').classList.remove('open');
 }
 
-// ===== MODAL =====
+// ===== EDIT MEMBER =====
+function openEditMember() {
+  const node = treeData.nodes.find(n => n.id === currentPanelNodeId);
+  if (!node) return;
+  const [prenom, nom] = (node.label||'').split('\n');
+  document.getElementById('em-prenom').value = prenom || '';
+  document.getElementById('em-nom').value = nom || '';
+  document.getElementById('em-born').value = node.born || '';
+  document.getElementById('em-sexe').value = node.sexe || 'H';
+  document.getElementById('em-lieu').value = node.lieu || 'La Réunion, France';
+  document.getElementById('em-origines').value = node.origines || '';
+  document.getElementById('em-notes').value = node.notes || '';
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('edit-member-modal').classList.add('open');
+}
+function saveMember() {
+  const node = treeData.nodes.find(n => n.id === currentPanelNodeId);
+  if (!node) return;
+  const prenom = document.getElementById('em-prenom').value.trim();
+  const nom = document.getElementById('em-nom').value.trim().toUpperCase();
+  node.label = prenom + '\n' + nom;
+  node.born = document.getElementById('em-born').value;
+  node.sexe = document.getElementById('em-sexe').value;
+  node.lieu = document.getElementById('em-lieu').value.trim();
+  node.origines = document.getElementById('em-origines').value.trim();
+  node.notes = document.getElementById('em-notes').value.trim();
+  saveData('treeNodes', treeData.nodes);
+  document.getElementById('edit-member-modal').classList.remove('open');
+  drawTree();
+  refreshHome();
+  showToast('✅ ' + prenom + ' ' + nom + ' mis à jour !');
+}
+
+// ===== ADD MEMBER MODAL =====
 function openAddModal() {
+  // Clear fields
+  ['add-prenom','add-nom','add-born','add-lieu','add-lien','add-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   document.getElementById('add-modal').classList.add('open');
 }
 function closeModal(e) {
@@ -1232,11 +1331,24 @@ function closeModal(e) {
     document.getElementById('add-modal').classList.remove('open');
 }
 function addMember() {
+  const prenom = (document.getElementById('add-prenom')?.value||'Nouveau').trim();
+  const nom = (document.getElementById('add-nom')?.value||'MEMBRE').trim().toUpperCase();
+  const born = document.getElementById('add-born')?.value || '';
+  const lieu = document.getElementById('add-lieu')?.value || 'La Réunion';
+  const lien = document.getElementById('add-lien')?.value || 'Autre';
+  const notes = document.getElementById('add-notes')?.value || '';
+  const newId = Math.max(...treeData.nodes.map(n=>n.id)) + 1;
+  treeData.nodes.push({
+    id: newId, label: prenom+'\n'+nom, gen: 1, side: 'other',
+    born, lieu, origines:'', notes, sexe:'H'
+  });
+  saveData('treeNodes', treeData.nodes);
   const count = document.getElementById('stat-members');
   count.textContent = parseInt(count.textContent) + 1;
   document.getElementById('add-modal').classList.remove('open');
-  showToast('✅ Membre ajouté avec succès !');
   drawTree();
+  refreshHome();
+  showToast('✅ ' + prenom + ' ' + nom + ' ajouté !');
 }
 
 // ===== TREE CANVAS =====
@@ -1356,8 +1468,7 @@ function drawTree() {
       if (!p) return;
       const r = n.gen === 0 ? 34 : 28;
       if (Math.hypot(mx - p.x, my - p.y) < r + 8) {
-        const nm = n.label.replace('\n', ' ');
-        showMemberPanel(nm, n.born || '?', 'La Réunion, France', 'Créole, Français, Africain');
+        showMemberPanel(n.id);
       }
     });
   };
@@ -1466,7 +1577,7 @@ function setTreeView(btn, mode) {
 
 // ===== PROFILE EDIT =====
 function openEditProfile() {
-  const p = loadProfile();
+  const p = loadData('profile', {});
   document.getElementById('ep-prenom').value = p.prenom || 'René';
   document.getElementById('ep-nom').value = p.nom || 'GRONDIN';
   document.getElementById('ep-naissance').value = p.naissance || '1985';
@@ -1474,10 +1585,6 @@ function openEditProfile() {
   document.getElementById('ep-tagline').value = p.tagline || 'Passionné de généalogie · La Réunion, France';
   document.getElementById('ep-email').value = p.email || '';
   document.getElementById('edit-profile-modal').classList.add('open');
-}
-function closeEditProfile(e) {
-  if (e.target === document.getElementById('edit-profile-modal'))
-    document.getElementById('edit-profile-modal').classList.remove('open');
 }
 function saveProfile() {
   const p = {
@@ -1488,42 +1595,72 @@ function saveProfile() {
     tagline: document.getElementById('ep-tagline').value.trim() || 'Passionné de généalogie',
     email: document.getElementById('ep-email').value.trim() || ''
   };
-  localStorage.setItem('rgn_profile', JSON.stringify(p));
+  saveData('profile', p);
   applyProfile(p);
+  // Sync node 1 (soi-même) avec le profil
+  const self = treeData.nodes.find(n => n.id === 1);
+  if (self) { self.label = p.prenom + '\n' + p.nom; self.born = p.naissance; self.lieu = p.lieu; saveData('treeNodes', treeData.nodes); drawTree(); }
   document.getElementById('edit-profile-modal').classList.remove('open');
   showToast('✅ Profil mis à jour !');
-}
-function loadProfile() {
-  try { return JSON.parse(localStorage.getItem('rgn_profile')) || {}; } catch(e) { return {}; }
+  refreshProfilePage();
 }
 function applyProfile(p) {
-  const fullName = (p.prenom || 'René') + ' ' + (p.nom || 'GRONDIN');
-  const initials = (p.prenom||'R')[0] + (p.nom||'G')[0];
-  // Avatar initials
-  document.querySelectorAll('.profile-avatar').forEach(el => {
-    el.childNodes[0].textContent = initials;
-  });
-  document.querySelector('.avatar-btn').textContent = initials;
-  // Name & tagline
-  const nameEl = document.querySelector('.profile-name');
-  if (nameEl) nameEl.textContent = fullName;
-  const tagEl = document.querySelector('.profile-tagline');
-  if (tagEl) tagEl.textContent = p.tagline || '';
-  // Info grid
+  const fullName = (p.prenom||'René') + ' ' + (p.nom||'GRONDIN');
+  const initials = ((p.prenom||'R')[0] + (p.nom||'G')[0]).toUpperCase();
+  // Avatar bouton top
+  const ab = document.querySelector('.avatar-btn');
+  if (ab) ab.textContent = initials;
+  // Avatar profil (remplacer le texte sans toucher au div enfant)
+  const pa = document.querySelector('.profile-avatar');
+  if (pa) { const edit = pa.querySelector('.profile-avatar-edit'); pa.textContent = initials; if(edit) pa.appendChild(edit); }
+  document.querySelectorAll('.profile-name').forEach(el => el.textContent = fullName);
+  document.querySelectorAll('.profile-tagline').forEach(el => el.textContent = p.tagline||'');
+  // Footer
+  const footer = document.querySelector('.footer');
+  if (footer) footer.innerHTML = `<span>Genealogy by RGN</span> &nbsp;·&nbsp; ${fullName} &nbsp;·&nbsp; @2026`;
+}
+function refreshProfilePage() {
+  const p = loadData('profile', {prenom:'René',nom:'GRONDIN',naissance:'1985',lieu:'La Réunion, France',tagline:'Passionné de généalogie · La Réunion, France'});
+  applyProfile(p);
+  // Mise à jour info grid
   const vals = document.querySelectorAll('.info-value');
-  if (vals[0]) vals[0].textContent = p.prenom || 'René';
-  if (vals[1]) vals[1].textContent = p.nom || 'GRONDIN';
-  if (vals[2]) vals[2].textContent = p.naissance || '1985';
-  if (vals[3]) vals[3].textContent = p.lieu || 'La Réunion';
-  // Logo subtitle
-  document.querySelector('.logo-title').textContent = 'Genealogy by RGN';
+  if (vals[0]) vals[0].textContent = p.prenom||'René';
+  if (vals[1]) vals[1].textContent = p.nom||'GRONDIN';
+  if (vals[2]) vals[2].textContent = p.naissance||'1985';
+  if (vals[3]) vals[3].textContent = p.lieu||'La Réunion';
+  if (vals[4]) vals[4].textContent = treeData.nodes.length;
+}
+function refreshHome() {
+  const count = document.getElementById('stat-members');
+  if (count) count.textContent = treeData.nodes.length;
+  // Mise à jour liste récente depuis treeData
+  const list = document.querySelector('.recent-list');
+  if (!list) return;
+  list.innerHTML = '';
+  treeData.nodes.slice(0,4).forEach(n => {
+    const [prenom, nom] = (n.label||'').split('\n');
+    const sexe = n.sexe || 'H';
+    const emoji = sexe === 'F' ? '👩' : (n.gen===0?'👤':'👨');
+    const div = document.createElement('div');
+    div.className = 'recent-item';
+    div.onclick = () => { showMemberPanel(n.id); };
+    div.innerHTML = `<div class="ri-avatar">${emoji}</div>
+      <div class="ri-info"><div class="ri-name">${prenom||''} ${nom||''}</div>
+      <div class="ri-detail">Né(e) ${n.born||'?'} · ${n.lieu||'La Réunion'}</div></div>
+      <div class="ri-badge">${n.id===1?'Vous':n.gen===1?'Parent':'Ancêtre'}</div>`;
+    list.appendChild(div);
+  });
 }
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
+  // Charger membres depuis localStorage
+  const savedNodes = loadData('treeNodes', null);
+  if (savedNodes && savedNodes.length > 0) treeData.nodes = savedNodes;
   // Load saved profile
-  const savedProfile = loadProfile();
+  const savedProfile = loadData('profile', {});
   if (Object.keys(savedProfile).length > 0) applyProfile(savedProfile);
+  refreshHome();
   // Draw tree when tab clicked
   // Drag to scroll on tree canvas
   let dragging = false, startX = 0, scrollLeft = 0;
