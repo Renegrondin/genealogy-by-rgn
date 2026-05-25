@@ -982,7 +982,7 @@
       <div class="profile-section" style="margin-top:16px;">
         <div class="profile-section-title">Paramètres &amp; Compte</div>
         <div class="settings-list">
-          <div class="settings-item" onclick="showToast('⚙️ Paramètres du profil')">
+          <div class="settings-item" onclick="openEditProfile()">
             <div class="settings-icon">👤</div>
             <div class="settings-text">
               <div class="settings-label">Modifier le profil</div>
@@ -1149,6 +1149,43 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="edit-profile-modal" onclick="closeEditProfile(event)">
+  <div class="modal">
+    <div class="modal-title">✏️ Modifier mon profil</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prénom</label>
+        <input class="form-input" id="ep-prenom" type="text" placeholder="René">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nom</label>
+        <input class="form-input" id="ep-nom" type="text" placeholder="GRONDIN">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Année de naissance</label>
+      <input class="form-input" id="ep-naissance" type="number" placeholder="1985" min="1800" max="2024">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lieu de naissance</label>
+      <input class="form-input" id="ep-lieu" type="text" placeholder="La Réunion, France">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description / Tagline</label>
+      <input class="form-input" id="ep-tagline" type="text" placeholder="Passionné de généalogie…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="ep-email" type="email" placeholder="rene@example.com">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('edit-profile-modal').classList.remove('open')">Annuler</button>
+      <button class="btn-save" onclick="saveProfile()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ===== NAVIGATION =====
@@ -1427,8 +1464,66 @@ function setTreeView(btn, mode) {
   showToast('🌿 ' + (labels[mode] || ''));
 }
 
+// ===== PROFILE EDIT =====
+function openEditProfile() {
+  const p = loadProfile();
+  document.getElementById('ep-prenom').value = p.prenom || 'René';
+  document.getElementById('ep-nom').value = p.nom || 'GRONDIN';
+  document.getElementById('ep-naissance').value = p.naissance || '1985';
+  document.getElementById('ep-lieu').value = p.lieu || 'La Réunion, France';
+  document.getElementById('ep-tagline').value = p.tagline || 'Passionné de généalogie · La Réunion, France';
+  document.getElementById('ep-email').value = p.email || '';
+  document.getElementById('edit-profile-modal').classList.add('open');
+}
+function closeEditProfile(e) {
+  if (e.target === document.getElementById('edit-profile-modal'))
+    document.getElementById('edit-profile-modal').classList.remove('open');
+}
+function saveProfile() {
+  const p = {
+    prenom: document.getElementById('ep-prenom').value.trim() || 'René',
+    nom: document.getElementById('ep-nom').value.trim() || 'GRONDIN',
+    naissance: document.getElementById('ep-naissance').value || '1985',
+    lieu: document.getElementById('ep-lieu').value.trim() || 'La Réunion, France',
+    tagline: document.getElementById('ep-tagline').value.trim() || 'Passionné de généalogie',
+    email: document.getElementById('ep-email').value.trim() || ''
+  };
+  localStorage.setItem('rgn_profile', JSON.stringify(p));
+  applyProfile(p);
+  document.getElementById('edit-profile-modal').classList.remove('open');
+  showToast('✅ Profil mis à jour !');
+}
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem('rgn_profile')) || {}; } catch(e) { return {}; }
+}
+function applyProfile(p) {
+  const fullName = (p.prenom || 'René') + ' ' + (p.nom || 'GRONDIN');
+  const initials = (p.prenom||'R')[0] + (p.nom||'G')[0];
+  // Avatar initials
+  document.querySelectorAll('.profile-avatar').forEach(el => {
+    el.childNodes[0].textContent = initials;
+  });
+  document.querySelector('.avatar-btn').textContent = initials;
+  // Name & tagline
+  const nameEl = document.querySelector('.profile-name');
+  if (nameEl) nameEl.textContent = fullName;
+  const tagEl = document.querySelector('.profile-tagline');
+  if (tagEl) tagEl.textContent = p.tagline || '';
+  // Info grid
+  const vals = document.querySelectorAll('.info-value');
+  if (vals[0]) vals[0].textContent = p.prenom || 'René';
+  if (vals[1]) vals[1].textContent = p.nom || 'GRONDIN';
+  if (vals[2]) vals[2].textContent = p.naissance || '1985';
+  if (vals[3]) vals[3].textContent = p.lieu || 'La Réunion';
+  // Logo subtitle
+  document.querySelector('.logo-title').textContent = 'Genealogy by RGN';
+}
+
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
+  // Load saved profile
+  const savedProfile = loadProfile();
+  if (Object.keys(savedProfile).length > 0) applyProfile(savedProfile);
   // Draw tree when tab clicked
   // Drag to scroll on tree canvas
   let dragging = false, startX = 0, scrollLeft = 0;
