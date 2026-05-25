@@ -514,14 +514,16 @@
   /* ===== SEARCH PANEL ===== */
   .topnav-search { padding-right: 30px; }
   .search-panel {
-    position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 250;
+    position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 150;
     background: var(--bg2); border-bottom: 2px solid var(--gold);
-    padding: 16px; transform: translateY(-110%);
-    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    padding: 16px;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s;
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     max-height: 80vh; overflow-y: auto;
   }
-  .search-panel.open { transform: translateY(0); }
+  .search-panel.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
   .sp-query { font-size: 12px; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .sp-query strong { color: var(--gold2); font-size: 14px; }
   .sp-close { margin-left: auto; background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--text2); flex-shrink: 0; }
@@ -535,7 +537,7 @@
   .sp-link-desc { font-size: 10px; color: var(--text2); margin-top: 1px; }
   .sp-import-btn { width: 100%; background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%); border: none; border-radius: 10px; padding: 12px; color: var(--bg); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .2s; margin-top: 4px; }
   .sp-import-btn:hover { opacity: .9; }
-  .search-panel-backdrop { position: fixed; inset: 0; z-index: 240; display: none; background: rgba(0,0,0,.4); }
+  .search-panel-backdrop { position: fixed; inset: 0; z-index: 140; display: none; background: rgba(0,0,0,.4); }
   .search-panel-backdrop.open { display: block; }
 
   /* ===== IMPORT MODAL ===== */
@@ -645,39 +647,8 @@
         </div>
         <div class="badge">Nouveau</div>
       </div>
-      <div class="recent-list">
-        <div class="recent-item" onclick="showMemberPanel('René Grondin','1985','Réunion, France','Créole, Français, Malgache')">
-          <div class="ri-avatar">👨</div>
-          <div class="ri-info">
-            <div class="ri-name">René GRONDIN</div>
-            <div class="ri-detail">Né 1985 · Réunion, France</div>
-          </div>
-          <div class="ri-badge">Vous</div>
-        </div>
-        <div class="recent-item" onclick="showMemberPanel('Marie Grondin','1960','Saint-Denis, Réunion','Créole, Français')">
-          <div class="ri-avatar">👩</div>
-          <div class="ri-info">
-            <div class="ri-name">Marie GRONDIN</div>
-            <div class="ri-detail">Née 1960 · Saint-Denis, Réunion</div>
-          </div>
-          <div class="ri-badge">Mère</div>
-        </div>
-        <div class="recent-item" onclick="showMemberPanel('Jean-Pierre Grondin','1935','Saint-Paul, Réunion','Créole, Africain')">
-          <div class="ri-avatar">👴</div>
-          <div class="ri-info">
-            <div class="ri-name">Jean-Pierre GRONDIN</div>
-            <div class="ri-detail">Né 1935 · Saint-Paul, Réunion</div>
-          </div>
-          <div class="ri-badge">GP</div>
-        </div>
-        <div class="recent-item" onclick="showMemberPanel('Fatima Nassur','1938','Mayotte, Comores','Comorien, Swahili')">
-          <div class="ri-avatar">👵</div>
-          <div class="ri-info">
-            <div class="ri-name">Fatima NASSUR</div>
-            <div class="ri-detail">Née 1938 · Mayotte, Comores</div>
-          </div>
-          <div class="ri-badge">GM</div>
-        </div>
+      <div class="recent-list" id="recent-list">
+        <!-- Populated dynamically by refreshHome() -->
       </div>
       <div style="height:16px"></div>
     </div>
@@ -1729,19 +1700,29 @@ function refreshProfilePage() {
 function refreshHome() {
   const count = document.getElementById('stat-members');
   if (count) count.textContent = treeData.nodes.length;
-  const list = document.querySelector('.recent-list');
+  // Use id selector for reliability
+  const list = document.getElementById('recent-list') || document.querySelector('.recent-list');
   if (!list) return;
   list.innerHTML = '';
-  treeData.nodes.slice(0, 4).forEach(n => {
-    const [prenom, nom] = (n.label || '').split('\n');
+  // Show up to 6 most recent members
+  const display = treeData.nodes.slice(0, 6);
+  if (display.length === 0) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Aucun membre — commencez par ajouter un ancêtre !</div>';
+    return;
+  }
+  display.forEach(n => {
+    const parts = (n.label || '').split('\n');
+    const prenom = parts[0] || '';
+    const nom = parts[1] || '';
     const emoji = n.sexe === 'F' ? '👩' : (n.gen === 0 ? '👤' : '👨');
+    const badge = n.id === 1 ? 'Vous' : n.gen === 1 ? 'Parent' : n.gen === 2 ? 'GP' : 'Ancêtre';
     const div = document.createElement('div');
     div.className = 'recent-item';
-    div.onclick = () => { showMemberPanel(n.id); };
-    div.innerHTML = `<div class="ri-avatar">${emoji}</div>
-      <div class="ri-info"><div class="ri-name">${prenom || ''} ${nom || ''}</div>
-      <div class="ri-detail">Né(e) ${n.born || '?'} · ${n.lieu || 'La Réunion'}</div></div>
-      <div class="ri-badge">${n.id === 1 ? 'Vous' : n.gen === 1 ? 'Parent' : 'Ancêtre'}</div>`;
+    div.onclick = function() { showMemberPanel(n.id); };
+    div.innerHTML = '<div class="ri-avatar">' + emoji + '</div>' +
+      '<div class="ri-info"><div class="ri-name">' + prenom + ' ' + nom + '</div>' +
+      '<div class="ri-detail">Né(e) ' + (n.born || '?') + ' · ' + (n.lieu || 'La Réunion') + '</div></div>' +
+      '<div class="ri-badge">' + badge + '</div>';
     list.appendChild(div);
   });
 }
