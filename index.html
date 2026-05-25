@@ -510,6 +510,48 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+
+  /* ===== SEARCH PANEL ===== */
+  .topnav-search { padding-right: 30px; }
+  .search-panel {
+    position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 250;
+    background: var(--bg2); border-bottom: 2px solid var(--gold);
+    padding: 16px; transform: translateY(-110%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    max-height: 80vh; overflow-y: auto;
+  }
+  .search-panel.open { transform: translateY(0); }
+  .sp-query { font-size: 12px; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .sp-query strong { color: var(--gold2); font-size: 14px; }
+  .sp-close { margin-left: auto; background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--text2); flex-shrink: 0; }
+  .sp-section { margin-bottom: 14px; }
+  .sp-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); margin-bottom: 8px; }
+  .sp-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sp-link { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: border-color .2s; }
+  .sp-link:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+  .sp-link-icon { font-size: 20px; flex-shrink: 0; }
+  .sp-link-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .sp-link-desc { font-size: 10px; color: var(--text2); margin-top: 1px; }
+  .sp-import-btn { width: 100%; background: linear-gradient(135deg, var(--gold) 0%, var(--copper) 100%); border: none; border-radius: 10px; padding: 12px; color: var(--bg); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .2s; margin-top: 4px; }
+  .sp-import-btn:hover { opacity: .9; }
+  .search-panel-backdrop { position: fixed; inset: 0; z-index: 240; display: none; background: rgba(0,0,0,.4); }
+  .search-panel-backdrop.open { display: block; }
+
+  /* ===== IMPORT MODAL ===== */
+  .import-dropzone { border: 2px dashed var(--gold); border-radius: var(--radius); padding: 28px 16px; text-align: center; cursor: pointer; background: rgba(201,168,76,0.04); transition: background .2s; position: relative; margin-bottom: 14px; display: block; }
+  .import-dropzone:hover { background: rgba(201,168,76,0.09); }
+  .import-dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .import-dropzone-icon { font-size: 36px; margin-bottom: 8px; }
+  .import-dropzone-title { font-size: 14px; font-weight: 700; color: var(--gold2); }
+  .import-dropzone-sub { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .import-preview { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text2); margin-bottom: 14px; max-height: 130px; overflow-y: auto; display: none; }
+  .import-preview.visible { display: block; }
+  .import-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .import-row:last-child { border-bottom: none; }
+  .import-row-name { flex: 1; font-size: 12px; color: var(--text); }
+  .import-row-detail { font-size: 10px; color: var(--text2); }
+
   /* ===== RESPONSIVE ===== */
   @media (min-width: 600px) {
     .stats-row { grid-template-columns: repeat(4, 1fr); }
@@ -536,8 +578,11 @@
       </div>
     </div>
     <div class="topnav-spacer"></div>
-    <div class="search-wrap" style="display:flex;align-items:center;">
-      <input class="topnav-search" type="text" placeholder="Rechercher un ancêtre…">
+    <div class="search-wrap" style="display:flex;align-items:center;position:relative;">
+      <input class="topnav-search" id="ancestor-search" type="text" placeholder="Rechercher un ancêtre…"
+        onkeydown="if(event.key==='Enter')openAncestorSearch()"
+        oninput="var b=document.querySelector('.search-go-btn');if(b){b.style.opacity=this.value?'1':'0';b.style.pointerEvents=this.value?'auto':'none';}">
+      <button class="search-go-btn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;font-weight:700;color:var(--gold);opacity:0;pointer-events:none;transition:opacity .2s;" onclick="openAncestorSearch()" title="Rechercher sur le web">›</button>
     </div>
     <div class="notif-btn" onclick="showToast('✅ Aucune nouvelle notification')">🔔<div class="notif-dot"></div></div>
     <div class="avatar-btn" onclick="navigate('profile')">RG</div>
@@ -659,6 +704,10 @@
         <button class="tbtn" onclick="showToast('📤 Export PDF en cours…')">
           <svg viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
           Exporter
+        </button>
+        <button class="tbtn" onclick="openImportModal()">
+          <svg viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 3v13m0 0l-5-5m5 5l5-5"/></svg>
+          Importer
         </button>
       </div>
 
@@ -1069,6 +1118,55 @@
 
 </div><!-- /app -->
 
+<!-- SEARCH PANEL BACKDROP -->
+<div class="search-panel-backdrop" id="search-backdrop" onclick="closeAncestorSearch()"></div>
+
+<!-- ANCESTOR SEARCH PANEL -->
+<div class="search-panel" id="search-panel">
+  <div class="sp-query">
+    <span>Rechercher : <strong id="sp-query-text"></strong></span>
+    <div class="sp-close" onclick="closeAncestorSearch()">✕</div>
+  </div>
+  <div class="sp-section">
+    <div class="sp-section-title">🌐 Bases de données généalogiques</div>
+    <div class="sp-links" id="sp-links"></div>
+  </div>
+  <div class="sp-section">
+    <div class="sp-section-title">📁 Importer un fichier dans mon arbre</div>
+    <button class="sp-import-btn" onclick="closeAncestorSearch();openImportModal()">
+      📂 Importer GEDCOM / CSV / JSON
+    </button>
+  </div>
+</div>
+
+<!-- IMPORT FILE MODAL -->
+<div class="modal-overlay" id="import-modal" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal">
+    <div class="modal-title">📂 Importer dans mon arbre</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+      Importez un fichier <strong style="color:var(--gold)">GEDCOM (.ged)</strong>,
+      <strong style="color:var(--gold)">CSV</strong> ou
+      <strong style="color:var(--gold)">JSON</strong> pour ajouter des membres.
+    </p>
+    <label class="import-dropzone" id="import-dropzone">
+      <input type="file" id="import-file-input" accept=".ged,.csv,.json,.txt" onchange="handleImportFile(this)">
+      <div class="import-dropzone-icon">📄</div>
+      <div class="import-dropzone-title">Glissez ou sélectionnez un fichier</div>
+      <div class="import-dropzone-sub">GEDCOM · CSV · JSON · Max 5 Mo</div>
+    </label>
+    <div class="import-preview" id="import-preview"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.7;background:var(--bg3);border-radius:8px;padding:10px;">
+      <strong style="color:var(--text2)">Format CSV :</strong> Prenom,Nom,Naissance,Lieu,Origines,Notes<br>
+      <strong style="color:var(--text2)">Format JSON :</strong> [{"prenom":"Marie","nom":"GRONDIN","born":"1960","lieu":"La Réunion"}]
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeImportModal()">Annuler</button>
+      <button class="btn-save" id="import-confirm-btn" onclick="confirmImport()" style="display:none">✅ Importer</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- MEMBER DETAIL PANEL -->
 <div class="panel-overlay" id="panel-overlay" onclick="closePanel(event)">
   <div class="panel" style="position:relative;">
@@ -1399,6 +1497,18 @@ function drawTree() {
       positions[id] = {x, y};
     });
   });
+  // Also position any extra nodes added by user
+  const knownIds = new Set([1,2,3,4,5,6,7,8,9,10,11]);
+  const extraNodes = treeData.nodes.filter(n => !knownIds.has(n.id));
+  if (extraNodes.length > 0) {
+    const extraY = genCounts.length * 120 + 80;
+    canvas.height = H + Math.ceil(extraNodes.length / 4) * 100 + 60;
+    extraNodes.forEach((n, i) => {
+      const col = i % 4;
+      const row2 = Math.floor(i / 4);
+      positions[n.id] = { x: (W / 5) * (col + 1), y: extraY + row2 * 100 };
+    });
+  }
 
   // Draw links
   treeData.links.forEach(([a, b]) => {
@@ -1406,7 +1516,7 @@ function drawTree() {
     if (!pa || !pb) return;
     ctx.beginPath();
     ctx.moveTo(pa.x, pa.y);
-    const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+    const my = (pa.y + pb.y) / 2;
     ctx.bezierCurveTo(pa.x, my, pb.x, my, pb.x, pb.y);
     ctx.strokeStyle = 'rgba(201,168,76,0.25)';
     ctx.lineWidth = 1.5;
@@ -1418,9 +1528,8 @@ function drawTree() {
     const p = positions[n.id];
     if (!p) return;
     const r = n.gen === 0 ? 34 : 28;
-    const col = nodeColors[n.side] || '#444';
+    const col = nodeColors[n.side] || '#555';
 
-    // Glow
     if (n.gen === 0) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
@@ -1428,7 +1537,6 @@ function drawTree() {
       ctx.fill();
     }
 
-    // Circle
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fillStyle = '#181818';
@@ -1437,24 +1545,24 @@ function drawTree() {
     ctx.lineWidth = n.gen === 0 ? 2.5 : 1.5;
     ctx.stroke();
 
-    // Avatar emoji
+    const lbl = (n.label || '');
+    const isFemale = n.sexe === 'F' || lbl.match(/ine\n|ma\n|tte\n|leste\n|tim\n|tte\n|ine\n/i);
+    const emoji = isFemale ? '👩' : '👨';
     ctx.font = n.gen === 0 ? '20px serif' : '16px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const emoji = n.label.includes('ine') || n.label.includes('ma') || n.label.includes('tte') || n.label.includes('leste') || n.label.includes('tim') ? '👩' : '👨';
     ctx.fillText(emoji, p.x, p.y - 2);
 
-    // Name
-    const lines = n.label.split('\n');
+    const lines2 = lbl.split('\n');
     ctx.font = n.gen === 0 ? 'bold 11px sans-serif' : '9px sans-serif';
     ctx.fillStyle = n.gen === 0 ? '#e8c97a' : '#a89070';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(lines[0], p.x, p.y + r + 4);
-    if (lines[1]) {
+    ctx.fillText(lines2[0] || '', p.x, p.y + r + 4);
+    if (lines2[1]) {
       ctx.font = n.gen === 0 ? 'bold 9px sans-serif' : '8px sans-serif';
       ctx.fillStyle = n.gen === 0 ? '#c9a84c' : '#6b5a40';
-      ctx.fillText(lines[1], p.x, p.y + r + 16);
+      ctx.fillText(lines2[1], p.x, p.y + r + 16);
     }
   });
 
@@ -1494,7 +1602,6 @@ function analyzePhoto() {
   const btn = document.getElementById('analyze-btn');
   btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:0;border-width:2px"></div> Analyse en cours…';
   btn.style.pointerEvents = 'none';
-
   setTimeout(() => {
     btn.innerHTML = '🔬 Analyser les origines';
     btn.style.pointerEvents = '';
@@ -1505,8 +1612,6 @@ function analyzePhoto() {
 function showResults() {
   const results = document.getElementById('results-section');
   results.classList.add('visible');
-
-  // Animate confidence ring
   const pct = 87;
   const ring = document.getElementById('ring-fg');
   const circumf = 2 * Math.PI * 40;
@@ -1521,7 +1626,6 @@ function showResults() {
     }, 20);
   }, 100);
 
-  // Origin bars
   const origins = [
     {label:'🇫🇷 Europe / France', pct:34, color:'#c9a84c'},
     {label:'🌍 Afrique sub-sahar.', pct:28, color:'#b87333'},
@@ -1530,28 +1634,21 @@ function showResults() {
     {label:'🌏 Asie du Sud-Est', pct:6, color:'#5288e0'},
     {label:'🌐 Autres', pct:9, color:'#9952c8'},
   ];
-
   const barsEl = document.getElementById('origins-bars');
   barsEl.innerHTML = '';
   origins.forEach(o => {
     const row = document.createElement('div');
     row.className = 'origin-row';
-    row.innerHTML = `
-      <div class="origin-label">${o.label}</div>
+    row.innerHTML = `<div class="origin-label">${o.label}</div>
       <div class="origin-bar-wrap"><div class="origin-bar" style="background:${o.color}"></div></div>
-      <div class="origin-pct">${o.pct}%</div>
-    `;
+      <div class="origin-pct">${o.pct}%</div>`;
     barsEl.appendChild(row);
-    setTimeout(() => {
-      row.querySelector('.origin-bar').style.width = o.pct + '%';
-    }, 200);
+    setTimeout(() => { row.querySelector('.origin-bar').style.width = o.pct + '%'; }, 200);
   });
 
-  // Haplogroup
   document.getElementById('haplo-text').innerHTML =
     `<strong style="color:var(--gold)">Haplogroupe maternel :</strong> L3e2b (Afrique de l'Est / Madagascar)<br>
-     <strong style="color:var(--gold)">Haplogroupe paternel :</strong> E1b1a1 (Bantu sub-saharien)<br>
-     <br>
+     <strong style="color:var(--gold)">Haplogroupe paternel :</strong> E1b1a1 (Bantu sub-saharien)<br><br>
      <em>Ancêtres probables :</em> Populations créoles de l'Océan Indien, lignée africaine bantoue, peuplement européen colonial, apport austronésien malgache.`;
 
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1563,7 +1660,7 @@ function saveToProfile() {
 
 // ===== MAP CLICK =====
 function mapClick(region, pct) {
-  showToast(`📍 ${region} · ${pct} de votre ADN`);
+  showToast('📍 ' + region + ' · ' + pct + ' de votre ADN');
 }
 
 // ===== TREE VIEW =====
@@ -1586,6 +1683,10 @@ function openEditProfile() {
   document.getElementById('ep-email').value = p.email || '';
   document.getElementById('edit-profile-modal').classList.add('open');
 }
+function closeEditProfile(e) {
+  if (!e || e.target === document.getElementById('edit-profile-modal'))
+    document.getElementById('edit-profile-modal').classList.remove('open');
+}
 function saveProfile() {
   const p = {
     prenom: document.getElementById('ep-prenom').value.trim() || 'René',
@@ -1597,7 +1698,6 @@ function saveProfile() {
   };
   saveData('profile', p);
   applyProfile(p);
-  // Sync node 1 (soi-même) avec le profil
   const self = treeData.nodes.find(n => n.id === 1);
   if (self) { self.label = p.prenom + '\n' + p.nom; self.born = p.naissance; self.lieu = p.lieu; saveData('treeNodes', treeData.nodes); drawTree(); }
   document.getElementById('edit-profile-modal').classList.remove('open');
@@ -1605,74 +1705,250 @@ function saveProfile() {
   refreshProfilePage();
 }
 function applyProfile(p) {
-  const fullName = (p.prenom||'René') + ' ' + (p.nom||'GRONDIN');
-  const initials = ((p.prenom||'R')[0] + (p.nom||'G')[0]).toUpperCase();
-  // Avatar bouton top
+  const fullName = (p.prenom || 'René') + ' ' + (p.nom || 'GRONDIN');
+  const initials = ((p.prenom || 'R')[0] + (p.nom || 'G')[0]).toUpperCase();
   const ab = document.querySelector('.avatar-btn');
   if (ab) ab.textContent = initials;
-  // Avatar profil (remplacer le texte sans toucher au div enfant)
   const pa = document.querySelector('.profile-avatar');
-  if (pa) { const edit = pa.querySelector('.profile-avatar-edit'); pa.textContent = initials; if(edit) pa.appendChild(edit); }
+  if (pa) { const edit = pa.querySelector('.profile-avatar-edit'); pa.textContent = initials; if (edit) pa.appendChild(edit); }
   document.querySelectorAll('.profile-name').forEach(el => el.textContent = fullName);
-  document.querySelectorAll('.profile-tagline').forEach(el => el.textContent = p.tagline||'');
-  // Footer
+  document.querySelectorAll('.profile-tagline').forEach(el => el.textContent = p.tagline || '');
   const footer = document.querySelector('.footer');
-  if (footer) footer.innerHTML = `<span>Genealogy by RGN</span> &nbsp;·&nbsp; ${fullName} &nbsp;·&nbsp; @2026`;
+  if (footer) footer.innerHTML = '<span>Genealogy by RGN</span> &nbsp;·&nbsp; ' + fullName + ' &nbsp;·&nbsp; @2026';
 }
 function refreshProfilePage() {
   const p = loadData('profile', {prenom:'René',nom:'GRONDIN',naissance:'1985',lieu:'La Réunion, France',tagline:'Passionné de généalogie · La Réunion, France'});
   applyProfile(p);
-  // Mise à jour info grid
   const vals = document.querySelectorAll('.info-value');
-  if (vals[0]) vals[0].textContent = p.prenom||'René';
-  if (vals[1]) vals[1].textContent = p.nom||'GRONDIN';
-  if (vals[2]) vals[2].textContent = p.naissance||'1985';
-  if (vals[3]) vals[3].textContent = p.lieu||'La Réunion';
+  if (vals[0]) vals[0].textContent = p.prenom || 'René';
+  if (vals[1]) vals[1].textContent = p.nom || 'GRONDIN';
+  if (vals[2]) vals[2].textContent = p.naissance || '1985';
+  if (vals[3]) vals[3].textContent = p.lieu || 'La Réunion';
   if (vals[4]) vals[4].textContent = treeData.nodes.length;
 }
 function refreshHome() {
   const count = document.getElementById('stat-members');
   if (count) count.textContent = treeData.nodes.length;
-  // Mise à jour liste récente depuis treeData
   const list = document.querySelector('.recent-list');
   if (!list) return;
   list.innerHTML = '';
-  treeData.nodes.slice(0,4).forEach(n => {
-    const [prenom, nom] = (n.label||'').split('\n');
-    const sexe = n.sexe || 'H';
-    const emoji = sexe === 'F' ? '👩' : (n.gen===0?'👤':'👨');
+  treeData.nodes.slice(0, 4).forEach(n => {
+    const [prenom, nom] = (n.label || '').split('\n');
+    const emoji = n.sexe === 'F' ? '👩' : (n.gen === 0 ? '👤' : '👨');
     const div = document.createElement('div');
     div.className = 'recent-item';
     div.onclick = () => { showMemberPanel(n.id); };
     div.innerHTML = `<div class="ri-avatar">${emoji}</div>
-      <div class="ri-info"><div class="ri-name">${prenom||''} ${nom||''}</div>
-      <div class="ri-detail">Né(e) ${n.born||'?'} · ${n.lieu||'La Réunion'}</div></div>
-      <div class="ri-badge">${n.id===1?'Vous':n.gen===1?'Parent':'Ancêtre'}</div>`;
+      <div class="ri-info"><div class="ri-name">${prenom || ''} ${nom || ''}</div>
+      <div class="ri-detail">Né(e) ${n.born || '?'} · ${n.lieu || 'La Réunion'}</div></div>
+      <div class="ri-badge">${n.id === 1 ? 'Vous' : n.gen === 1 ? 'Parent' : 'Ancêtre'}</div>`;
     list.appendChild(div);
   });
 }
 
+// ===== ANCESTOR SEARCH =====
+const genealogyDatabases = [
+  { name: 'FamilySearch', icon: '🕵️', desc: 'Archives mondiales gratuites', url: 'https://www.familysearch.org/search/record/results?q.surname={q}&count=20' },
+  { name: 'Geneanet', icon: '🌳', desc: 'Base franco-européenne', url: 'https://en.geneanet.org/search/?name={q}' },
+  { name: 'Ancestry', icon: '🏛️', desc: 'La plus grande base mondiale', url: 'https://www.ancestry.fr/search/?name={q}' },
+  { name: 'Archives nationales', icon: '📜', desc: 'Archives France', url: 'https://recherche.archives-nationales.culture.gouv.fr/search?query={q}' },
+  { name: 'Réunion / Mayotte', icon: '🌴', desc: 'Généalogie Océan Indien', url: 'https://www.geneanet.org/search/?name={q}&place=reunion' },
+  { name: 'MyHeritage', icon: '💡', desc: 'ADN & arbres familiaux', url: 'https://www.myheritage.fr/research/collection-1/myheritage-world-family-tree?keyword={q}' },
+  { name: 'Filae', icon: '🇫🇷', desc: 'Archives françaises', url: 'https://www.filae.com/search?lastName={q}' },
+  { name: 'Google', icon: '🔍', desc: 'Recherche libre', url: 'https://www.google.com/search?q={q}+genealogie+ancetre' },
+];
+
+function openAncestorSearch() {
+  const q = (document.getElementById('ancestor-search').value || '').trim();
+  if (!q) { document.getElementById('ancestor-search').focus(); return; }
+  document.getElementById('sp-query-text').textContent = q;
+  const linksEl = document.getElementById('sp-links');
+  linksEl.innerHTML = '';
+  genealogyDatabases.forEach(db => {
+    const url = db.url.replace(/{q}/g, encodeURIComponent(q));
+    const a = document.createElement('a');
+    a.className = 'sp-link';
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.innerHTML = '<div class="sp-link-icon">' + db.icon + '</div>' +
+      '<div><div class="sp-link-name">' + db.name + '</div><div class="sp-link-desc">' + db.desc + '</div></div>';
+    linksEl.appendChild(a);
+  });
+  document.getElementById('search-panel').classList.add('open');
+  document.getElementById('search-backdrop').classList.add('open');
+}
+function closeAncestorSearch() {
+  document.getElementById('search-panel').classList.remove('open');
+  document.getElementById('search-backdrop').classList.remove('open');
+}
+
+// ===== FILE IMPORT =====
+let pendingImportNodes = [];
+
+function openImportModal() {
+  pendingImportNodes = [];
+  const fi = document.getElementById('import-file-input');
+  if (fi) fi.value = '';
+  const prev = document.getElementById('import-preview');
+  if (prev) { prev.innerHTML = ''; prev.classList.remove('visible'); }
+  const btn = document.getElementById('import-confirm-btn');
+  if (btn) btn.style.display = 'none';
+  const dz = document.getElementById('import-dropzone');
+  if (dz) {
+    dz.querySelector('.import-dropzone-icon').textContent = '📄';
+    dz.querySelector('.import-dropzone-title').textContent = 'Glissez ou sélectionnez un fichier';
+    dz.querySelector('.import-dropzone-sub').textContent = 'GEDCOM · CSV · JSON · Max 5 Mo';
+  }
+  document.getElementById('import-modal').classList.add('open');
+}
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+function handleImportFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('❌ Fichier trop volumineux (max 5 Mo)'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const text = ev.target.result;
+    const ext = file.name.split('.').pop().toLowerCase();
+    try {
+      if (ext === 'ged') pendingImportNodes = parseGEDCOM(text);
+      else if (ext === 'csv') pendingImportNodes = parseCSV(text);
+      else if (ext === 'json') pendingImportNodes = parseJSONImport(text);
+      else { showToast('❌ Format non supporté (.ged .csv .json)'); return; }
+      previewImport(pendingImportNodes, file.name);
+    } catch(err) { showToast('❌ Erreur : ' + err.message); }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseGEDCOM(text) {
+  const lines = text.split(/\r?\n/);
+  const members = [];
+  let cur = null;
+  lines.forEach(function(line) {
+    const m = line.match(/^(\d)\s+(\S+)\s*(.*)?$/);
+    if (!m) return;
+    const level = parseInt(m[1]), tag = m[2], val = (m[3] || '').trim();
+    if (level === 0 && val === 'INDI') {
+      if (cur) members.push(cur);
+      cur = {prenom:'', nom:'', born:'', sexe:'H', lieu:''};
+    }
+    if (!cur) return;
+    if (level === 1 && tag === 'SEX') cur.sexe = val === 'F' ? 'F' : 'H';
+    if (level === 1 && tag === 'NAME') {
+      const nm = val.replace(/\//g, '').trim().split(/\s+/);
+      cur.prenom = nm[0] || '';
+      cur.nom = nm.slice(1).join(' ');
+    }
+    if (level === 2 && tag === 'GIVN') cur.prenom = val;
+    if (level === 2 && tag === 'SURN') cur.nom = val;
+    if (level === 2 && tag === 'DATE') { const yr = val.match(/\b(\d{4})\b/); if (yr && !cur.born) cur.born = yr[1]; }
+    if (level === 2 && tag === 'PLAC') { if (!cur.lieu) cur.lieu = val; }
+  });
+  if (cur) members.push(cur);
+  return members.filter(function(m) { return m.prenom || m.nom; });
+}
+
+function parseCSV(text) {
+  const rows = text.trim().split(/\r?\n/);
+  if (rows.length < 2) return [];
+  const sep = rows[0].includes(';') ? ';' : ',';
+  const header = rows[0].toLowerCase().split(sep);
+  function idx(k) { return header.findIndex(function(h) { return h.trim().replace(/"/g,'').includes(k); }); }
+  const iP = [idx('prenom'), idx('given'), idx('first')].find(x => x >= 0) ?? -1;
+  const iN = [idx('nom'), idx('surname'), idx('last')].find(x => x >= 0) ?? -1;
+  const iB = [idx('naiss'), idx('born'), idx('birth')].find(x => x >= 0) ?? -1;
+  const iL = [idx('lieu'), idx('place')].find(x => x >= 0) ?? -1;
+  const iO = idx('orig');
+  const iNt = idx('note');
+  const iS = [idx('sexe'), idx('sex'), idx('genre')].find(x => x >= 0) ?? -1;
+  return rows.slice(1).filter(function(r) { return r.trim(); }).map(function(row) {
+    const cells = row.split(sep);
+    function get(i) { return i >= 0 && cells[i] ? cells[i].trim().replace(/^["'\s]+|["'\s]+$/g, '') : ''; }
+    return { prenom: get(iP) || 'Inconnu', nom: get(iN), born: get(iB), lieu: get(iL), origines: get(iO), notes: get(iNt), sexe: (get(iS) || 'H').toUpperCase().startsWith('F') ? 'F' : 'H' };
+  }).filter(function(m) { return m.prenom || m.nom; });
+}
+
+function parseJSONImport(text) {
+  const data = JSON.parse(text);
+  const arr = Array.isArray(data) ? data : (data.members || data.nodes || [data]);
+  return arr.map(function(o) {
+    return {
+      prenom: o.prenom || o.given || o.firstName || o.first || 'Inconnu',
+      nom: o.nom || o.surname || o.lastName || o.last || '',
+      born: o.born || o.birth || o.naissance || '',
+      sexe: ((o.sexe || o.sex || o.genre || 'H') + '').toUpperCase().startsWith('F') ? 'F' : 'H',
+      lieu: o.lieu || o.place || o.birthPlace || '',
+      origines: o.origines || o.origins || '',
+      notes: o.notes || o.description || ''
+    };
+  }).filter(function(m) { return m.prenom || m.nom; });
+}
+
+function previewImport(members, filename) {
+  const preview = document.getElementById('import-preview');
+  if (!members.length) {
+    preview.innerHTML = '<em style="color:var(--text3)">Aucun membre détecté.</em>';
+    preview.classList.add('visible');
+    return;
+  }
+  const dz = document.getElementById('import-dropzone');
+  dz.querySelector('.import-dropzone-icon').textContent = '✅';
+  dz.querySelector('.import-dropzone-title').textContent = filename;
+  dz.querySelector('.import-dropzone-sub').textContent = members.length + ' membre(s) détecté(s)';
+  let html2 = members.slice(0, 10).map(function(m) {
+    return '<div class="import-row"><span class="import-row-name">' +
+      (m.sexe === 'F' ? '👩' : '👨') + ' ' + m.prenom + ' ' + m.nom +
+      '</span><span class="import-row-detail">' + (m.born || '?') + ' · ' + (m.lieu || '—') + '</span></div>';
+  }).join('');
+  if (members.length > 10) html2 += '<div style="text-align:center;color:var(--text3);padding:4px;font-size:11px">… et ' + (members.length - 10) + ' autres</div>';
+  preview.innerHTML = html2;
+  preview.classList.add('visible');
+  const btn = document.getElementById('import-confirm-btn');
+  btn.style.display = '';
+  btn.textContent = '✅ Importer ' + members.length + ' membre(s)';
+}
+
+function confirmImport() {
+  if (!pendingImportNodes.length) return;
+  let maxId = Math.max.apply(null, treeData.nodes.map(function(n) { return n.id; }));
+  pendingImportNodes.forEach(function(m) {
+    maxId++;
+    treeData.nodes.push({
+      id: maxId,
+      label: (m.prenom || 'Inconnu') + '\n' + (m.nom || '').toUpperCase(),
+      gen: 1, side: 'other',
+      born: m.born || '', sexe: m.sexe || 'H',
+      lieu: m.lieu || '', origines: m.origines || '', notes: m.notes || ''
+    });
+  });
+  saveData('treeNodes', treeData.nodes);
+  closeImportModal();
+  drawTree();
+  refreshHome();
+  showToast('✅ ' + pendingImportNodes.length + ' membre(s) importé(s) !');
+}
+
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
-  // Charger membres depuis localStorage
   const savedNodes = loadData('treeNodes', null);
   if (savedNodes && savedNodes.length > 0) treeData.nodes = savedNodes;
-  // Load saved profile
   const savedProfile = loadData('profile', {});
   if (Object.keys(savedProfile).length > 0) applyProfile(savedProfile);
   refreshHome();
-  // Draw tree when tab clicked
   // Drag to scroll on tree canvas
-  let dragging = false, startX = 0, scrollLeft = 0;
+  let dragging = false, startX = 0;
   const canvas = document.getElementById('tree-canvas');
   canvas.addEventListener('mousedown', e => { dragging = true; startX = e.pageX; });
   canvas.addEventListener('mouseleave', () => dragging = false);
   canvas.addEventListener('mouseup', () => dragging = false);
-  canvas.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    e.preventDefault();
-  });
+  canvas.addEventListener('mousemove', e => { if (!dragging) return; e.preventDefault(); });
 });
+
 </script>
 </body>
 </html>
